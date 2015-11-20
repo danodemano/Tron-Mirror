@@ -56,7 +56,7 @@ $mirror_bitcoin     = '1NpofcZqWNWHamcYhdk9kyxKdzrSSi42cL'; //The mirror ops bit
 $mirror_email       = 'webmaster@danodemano.com'; //The email address of this mirror op to display for a contact point
 $tron_wiki          = 'https://www.reddit.com/r/TronScript/wiki/index'; //This is the wiki link to be show if the visitor wants more info
 $mirror_provider    = '/u/Danodemano'; //This is the mirror provider to show in the page title
-$update_script      = 'tronupdate_v5.0.sh'; //The name of the auto-update script for download link
+$update_script      = 'tronupdate.sh'; //The name of the auto-update script for download link
 $check_timeout      = 5; //In seconds - Leave this as-is unless you have issues with timeouts to the official repo
 
 /*************************************************************************************************************************************
