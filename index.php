@@ -2,14 +2,14 @@
 /*
 ***************************************************************
 ***************************************************************
-Created by:            Dan Bunyard
-Email:                    danodemano@gmail.com
-Created on:            02/12/2015
-Last modified on:    11/07/2015
+Created by:           Dan Bunyard
+Email:                danodemano@gmail.com
+Created on:           02/12/2015
+Last modified on:     11/07/2015
 ***************************************************************
 Files:                index.php
 ***************************************************************
-Description:        This script is used to display the Tron
+Description:          This script is used to display the Tron
 download link and also check for a current version against
 the official mirror.
 ***************************************************************
@@ -17,12 +17,12 @@ Notes:                Combine this with the auto-update script
 for an ideal mirror setup.  With this page plus the auto-update
 script your mirror is virtually hands-off.
 ***************************************************************
-Revisions:         20151010 - Updated to use sha256 sum file
-                        20151102 - Added socket timeout
-                        20151106 - Update style
-                        20151107 - Replaced tables with CSS and cleanup
+Revisions:            20151010 - Updated to use sha256 sum file
+                      20151102 - Added socket timeout
+                      20151106 - Update style
+                      20151107 - Replaced tables with CSS and cleanup
 ***************************************************************
-To do list:         None
+To do list:           None
 ***************************************************************
 ***************************************************************
 The MIT License (MIT)
@@ -50,14 +50,14 @@ SOFTWARE.
 
 //Global variables, change as needed
 $official_sha256    = 'http://bmrf.org/repos/tron/sha256sums.txt'; //The path the the official sha256sum text file
-$official_mirror = 'http://bmrf.org/repos/tron/'; //Same as above, just the root URL
-$author_bitcoin  = '1LSJ9qDzuHyRx6FfbUmHVSii4sLU3sx2TF'; //The script author bitcoin address
-$mirror_bitcoin  = '1NpofcZqWNWHamcYhdk9kyxKdzrSSi42cL'; //The mirror ops bitcoin address
-$mirror_email    = 'webmaster@danodemano.com'; //The email address of this mirror op to display for a contact point
+$official_mirror    = 'http://bmrf.org/repos/tron/'; //Same as above, just the root URL
+$author_bitcoin     = '1LSJ9qDzuHyRx6FfbUmHVSii4sLU3sx2TF'; //The script author bitcoin address
+$mirror_bitcoin     = '1NpofcZqWNWHamcYhdk9kyxKdzrSSi42cL'; //The mirror ops bitcoin address
+$mirror_email       = 'webmaster@danodemano.com'; //The email address of this mirror op to display for a contact point
 $tron_wiki          = 'https://www.reddit.com/r/TronScript/wiki/index'; //This is the wiki link to be show if the visitor wants more info
-$mirror_provider = '/u/Danodemano'; //This is the mirror provider to show in the page title
-$update_script     = 'tronupdate_v5.0.sh'; //The name of the auto-update script for download link
-$check_timeout = 2; //In seconds - Leave this as-is unless you have issues with timeouts to the official repo
+$mirror_provider    = '/u/Danodemano'; //This is the mirror provider to show in the page title
+$update_script      = 'tronupdate_v5.0.sh'; //The name of the auto-update script for download link
+$check_timeout      = 2; //In seconds - Leave this as-is unless you have issues with timeouts to the official repo
 
 /*************************************************************************************************************************************
 **************************************************************************************************************************************
