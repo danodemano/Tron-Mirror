@@ -9,7 +9,7 @@
 
 #Written by reddit.com/u/-jimmyrustles
 #Modified by reddit.com/u/danodemano (see changelog)
-#VERSION 6.1
+#VERSION 6.2
 
 #CHANGELOG:
 #V1.0 Initial release
@@ -31,14 +31,15 @@
 #v5.7 Added email error handling and changed if statement for consistency
 #v6.0 Added in optional logging of nearly all outputs and cleanup/update comments
 #v6.1 Fixed bug to not check GPG key if sha256sum file not updated or not found, fixed bug in download retry logic
+#v6.2 Added option to download to temp directory them move to the actual repo directory, removed command line download dir option
 
 #TODO
 # - Add in log purging/rotation (or custom logrotate config)
-# - Download file to temp location then copy to real location after hash verification
 
 #USAGE:
-#./tronupdate.sh <directory to download Tron in>
-#If directory is not specified, the script will default to the current directory (unless manually specified below)
+#Run this as a cron job at regular intervals - I run mine ever 10 minutes something like this:
+#10,20,30,40,50 * * * * root	/var/www/scripts/tronupdate.sh  > /dev/null 2>&1
+#NOTE: Pick your own minutes to run the script to minimize load on the official repo
 
 #The MIT License (MIT)
 
@@ -70,10 +71,9 @@
 #*************************************************************************************************************************************
 #*************************************************************************************************************************************
 
-#set download location (usually your Tron mirror directory)
-#if directory is not specified on the command line, it will default to the current directory. This can be overwritten.
-#change this to change the default directory
-defaultdownloaddir="/var/www/html/danodemano/Tron"
+#Set download location (usually your Tron mirror directory)
+#If the downloadtemp is set below we will download to there then verify and move to this directory
+downloaddir="/var/www/html/danodemano/Tron"
 
 #Change to true to purge all previous Tron versions when updating.
 purgeoldversions=true
@@ -120,6 +120,15 @@ overwritelog=false
 #If you're on shared hosting this will need changed
 loglocation="/var/log/tronupdate.log"
 
+#Set true to enable downloading to a temp directory
+#Once the sha256sum is verified the file will be moved to the proper directory
+#Be sure to specify the temp directory below
+#NOTE: We don't worry about the shasum files and download straight to the specified directory
+downloadtemp=true
+
+#Temp directory to download the file to for verification
+tempdir="/tmp/tron"
+
 # Set repo url
 repodir="https://jailhouse.sgc-hosting.com/~bmrforg/repos/tron" #You will most likely want to keep this as it is.
 
@@ -138,6 +147,9 @@ sha256sumsurl="https://jailhouse.sgc-hosting.com/~bmrforg/repos/tron/sha256sums.
 #*************************************************************************************************************************************
 #*************************************************************************************************************************************
 
+#Begin script
+#**********
+
 #Text colors for use in console messages - probably don't want to mess with this
 red=$(tput setaf 1)
 green=$(tput setaf 2)
@@ -149,7 +161,6 @@ invert=$(tput rev)
 #Begin functions
 #************
 
-#Logging function
 #Logging function
 function logging {
 	#Get the passed message and type
@@ -226,7 +237,12 @@ function verify {
 	correcthash=${arrIN[1]}
 	
 	#Get hash of downloaded file
-	localhash=$(sha256sum "$downloaddir/$updatefile" | awk '{ print $1 }')
+	if [ "$downloadtemp" = true ]
+	then 
+		localhash=$(sha256sum "$tempdir/$updatefile" | awk '{ print $1 }')
+	else
+		localhash=$(sha256sum "$downloaddir/$updatefile" | awk '{ print $1 }')
+	fi #end if [ "$downloadtemp" = true ]
 	logging "$localhash" "INFO"
 	
 	#Print hashes 
@@ -284,6 +300,15 @@ function checkifverified {
 		logging "MIRROR UPDATED!" "INFO"
 		echo "${reset}"
 		
+		#Move the file if we are downloading to temp
+		if [ "$downloadtemp" = true ]
+		then
+			echo "${green}"
+			logging "Moving file from $tempdir to $downloaddir." "INFO"
+			echo "${reset}"
+			mv "$tempdir/$updatefile" "$downloaddir/$updatefile"
+		fi #end if [ "$downloadtemp" = true ]
+		
 		#Purge old versions (if enabled)
 		if [ "$purgeoldversions" = true ]
 		then
@@ -327,41 +352,37 @@ function checkifverified {
 		echo "${red}"
 		logging "Hashes do not match! $updatefile does not match repo file! Will retry in $sleeptime seconds!$" "WARNING"
 		echo "{reset}"
-		#cleanup corrupt file
-		rm -f -v "$downloaddir/$updatefile"
-		#Sleep based on the variable above in the configs
-		sleep $sleeptime
-		#Retry the download
-		output1=`wget -nc -O "${downloaddir}"/"${updatefile}" "${repodir}"/"${updatefile}"`
+		
+		#From either the temp dir or the actual dir
+		if [ "$downloadtemp" = true ]
+		then
+			rm -f -v "$tempdir/$updatefile"
+			#Sleep based on the variable above in the configs
+			sleep $sleeptime
+			#Retry the download
+			output1=`wget -nc -O "${tempdir}"/"${updatefile}" "${repodir}"/"${updatefile}"`
+		else
+			rm -f -v "$downloaddir/$updatefile"
+			#Sleep based on the variable above in the configs
+			sleep $sleeptime
+			#Retry the download
+			output1=`wget -nc -O "${downloaddir}"/"${updatefile}" "${repodir}"/"${updatefile}"`
+		fi #end if [ "$downloadtemp" = true ]
+		
 		echo "${invert}"
 		logging "$output1" "INFO"
 		echo "${reset}"
-		#increment "downloadtries" by 1
+		
+		#increment "downloadtries" by 1 to keep tabs on the attempts
 		downloadtries=$((downloadtries + 1))
 	fi #end if [ "$verified" == true ]
 } #end function checkifverified {
-
-#General error handling function - is this needed?
-function errorhandler {
-	echo "Nothing to see!"
-}
 
 #End functions
 #***********
 
 #Begin main code
 #**************
-
-#If directory not specified, use default
-if [ "$1" = "" ]
-then
-	echo "${red}"
-	logging "Download directory not specified, using default!" "INFO"
-	echo "${reset}"
-	downloaddir=$defaultdownloaddir #use default directory
-else
-	downloaddir=$1 #use specified directory
-fi #end if [ "$1" == "" ]
 
 #If we are set to overwrite the log remove the log file
 if [ "$overwritelog" = true ]
@@ -447,8 +468,13 @@ then
 	date=${arrIN[4]}
 	updatefile="$name $version $date"
 	logging "File to download is: $updatefile" "INFO"
-	#actually download Tron
-	output1=`wget -nc -O "${downloaddir}"/"${updatefile}" "${repodir}"/"${updatefile}"`
+	#Check if we are downloading to a temp directory then download the file
+	if [ "$downloadtemp" = true ]
+	then
+		output1=`wget -nc -O "${tempdir}"/"${updatefile}" "${repodir}"/"${updatefile}"`
+	else
+		output1=`wget -nc -O "${downloaddir}"/"${updatefile}" "${repodir}"/"${updatefile}"`
+	fi #end if [ "$downloadtemp" = true ]
 	echo "${invert}"
 	logging "$output1" "INFO"
 	echo "${reset}"
@@ -472,7 +498,12 @@ then
 			#Send an email about the failed download
 			emailalert "error" "Update Failed" "After $downloadtries downloads $updatefile could still not be verified!"
 			#cleanup corrupt file
-			rm -f -v "$downloaddir/$updatefile"
+			if [ "$downloadtemp" = true ]
+			then
+				rm -f -v "$tempdir/$updatefile"
+			else
+				rm -f -v "$downloaddir/$updatefile"
+			fi #end if [ "$downloadtemp" = true ]
 			#We are at the end - exit from the script
 			exit
 		fi #end if (( downloadtries < maxdownloadattempts ))
