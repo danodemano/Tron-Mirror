@@ -1,0 +1,6 @@
+/var/log/tronupdate.log {
+	missingok
+	monthly
+	notifempty
+	compress
+}
