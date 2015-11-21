@@ -38,7 +38,7 @@
 
 #USAGE:
 #Run this as a cron job at regular intervals - I run mine ever 10 minutes something like this:
-#10,20,30,40,50 * * * * root	/var/www/scripts/tronupdate.sh  > /dev/null 2>&1
+#10,20,30,40,50 * * * * apache	/var/www/scripts/tronupdate.sh  > /dev/null 2>&1
 #NOTE: Pick your own minutes to run the script to minimize load on the official repo
 
 #The MIT License (MIT)
