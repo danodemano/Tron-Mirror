@@ -34,7 +34,7 @@
 #v6.2 Added option to download to temp directory them move to the actual repo directory, removed command line download dir option
 
 #TODO
-# - Add in log purging/rotation (or custom logrotate config)
+# - Nothing -
 
 #USAGE:
 #Run this as a cron job at regular intervals - I run mine ever 10 minutes something like this:
@@ -119,6 +119,14 @@ overwritelog=false
 #The location of the log file
 #If you're on shared hosting this will need changed
 loglocation="/var/log/tronupdate.log"
+
+#IF YOU ENABLE LOGGING I SUGGEST YOU CREATE A LOGROTATE FILE FOR TRON
+#/var/log/tronupdate.log {
+#	missingok
+#	monthly
+#	notifempty
+#	compress
+#}
 
 #Set true to enable downloading to a temp directory
 #Once the sha256sum is verified the file will be moved to the proper directory
