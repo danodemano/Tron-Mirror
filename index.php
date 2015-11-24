@@ -50,8 +50,8 @@ SOFTWARE.
 */
 
 //Global variables, change as needed
-$official_sha256    	= 'http://bmrf.org/repos/tron/sha256sums.txt'; //The path the the official sha256sum text file
-$official_mirror 		= 'http://bmrf.org/repos/tron/'; //Same as above, just the root URL
+$official_sha256    	= 'https://bmrf.org/repos/tron/sha256sums.txt'; //The path the the official sha256sum text file
+$official_mirror 		= 'https://bmrf.org/repos/tron/'; //Same as above, just the root URL
 $author_bitcoin  	= '1LSJ9qDzuHyRx6FfbUmHVSii4sLU3sx2TF'; //The script author bitcoin address
 $mirror_bitcoin  	= '1NpofcZqWNWHamcYhdk9kyxKdzrSSi42cL'; //The mirror ops bitcoin address
 $mirror_email    	= 'webmaster@danodemano.com'; //The email address of this mirror op to display for a contact point
