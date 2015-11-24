@@ -138,13 +138,13 @@ downloadtemp=true
 tempdir="/tmp/tron"
 
 # Set repo url
-repodir="https://jailhouse.sgc-hosting.com/~bmrforg/repos/tron" #You will most likely want to keep this as it is.
+repodir="https://bmrf.org/repos/tron" #You will most likely want to keep this as it is.
 
 # Set Tron repo sha256sums.txt.asc file url
-sha256sumasc="https://jailhouse.sgc-hosting.com/~bmrforg/repos/tron/sha256sums.txt.asc" #You most likely want to keep this as it is.
+sha256sumasc="https://bmrf.org/repos/tron/sha256sums.txt.asc" #You will most likely want to keep this as it is.
 
 # Set Tron repo sha256sum.txt file url
-sha256sumsurl="https://jailhouse.sgc-hosting.com/~bmrforg/repos/tron/sha256sums.txt" #You most likely want to keep this as it is.
+sha256sumsurl="https://bmrf.org/repos/tron/sha256sums.txt" #You will most likely want to keep this as it is.
 
 
 #*************************************************************************************************************************************
