@@ -9,7 +9,7 @@
 
 #Written by reddit.com/u/-jimmyrustles
 #Modified by reddit.com/u/danodemano (see changelog)
-#VERSION 6.2
+#VERSION 6.3
 
 #CHANGELOG:
 #V1.0 Initial release
@@ -32,6 +32,7 @@
 #v6.0 Added in optional logging of nearly all outputs and cleanup/update comments
 #v6.1 Fixed bug to not check GPG key if sha256sum file not updated or not found, fixed bug in download retry logic
 #v6.2 Added option to download to temp directory them move to the actual repo directory, removed command line download dir option
+#v6.3 Fixed bug with line breaks in sha256sum file, fixed coloring bug
 
 #TODO
 # - Nothing -
@@ -247,10 +248,6 @@ function verify {
 	#Get hash of downloaded file
 	if [ "$downloadtemp" = true ]
 	then 
-		#Create the directory if it doesn't exist
-		if [ ! -d "$DIRECTORY" ]; then
-			mkdir "$tempdir"
-		fi #end if [ ! -d "$DIRECTORY" ]; then
 		localhash=$(sha256sum "$tempdir/$updatefile" | awk '{ print $1 }')
 	else
 		localhash=$(sha256sum "$downloaddir/$updatefile" | awk '{ print $1 }')
@@ -479,10 +476,16 @@ then
 	version=${arrIN[3]}
 	date=${arrIN[4]}
 	updatefile="$name $version $date"
+	#Remove linebreaks from the updatefile
+	updatefile=$(echo $updatefile | sed -e 's/\r//g')
 	logging "File to download is: $updatefile" "INFO"
 	#Check if we are downloading to a temp directory then download the file
 	if [ "$downloadtemp" = true ]
 	then
+		#Create the directory if it doesn't exist
+		if [ ! -d "$DIRECTORY" ]; then
+			mkdir "$tempdir"
+		fi #end if [ ! -d "$DIRECTORY" ]; then
 		output1=`wget -nc -O "${tempdir}"/"${updatefile}" "${repodir}"/"${updatefile}"`
 	else
 		output1=`wget -nc -O "${downloaddir}"/"${updatefile}" "${repodir}"/"${updatefile}"`
