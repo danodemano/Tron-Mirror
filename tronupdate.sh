@@ -358,8 +358,8 @@ function checkifverified {
 		exit
 	else
 		echo "${red}"
-		logging "Hashes do not match! $updatefile does not match repo file! Will retry in $sleeptime seconds!$" "WARNING"
-		echo "{reset}"
+		logging "Hashes do not match! $updatefile does not match repo file! Will retry in $sleeptime seconds!" "WARNING"
+		echo "${reset}"
 		
 		#From either the temp dir or the actual dir
 		if [ "$downloadtemp" = true ]
