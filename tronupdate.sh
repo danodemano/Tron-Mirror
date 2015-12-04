@@ -247,6 +247,10 @@ function verify {
 	#Get hash of downloaded file
 	if [ "$downloadtemp" = true ]
 	then 
+		#Create the directory if it doesn't exist
+		if [ ! -d "$DIRECTORY" ]; then
+			mkdir "$tempdir"
+		fi #end if [ ! -d "$DIRECTORY" ]; then
 		localhash=$(sha256sum "$tempdir/$updatefile" | awk '{ print $1 }')
 	else
 		localhash=$(sha256sum "$downloaddir/$updatefile" | awk '{ print $1 }')
