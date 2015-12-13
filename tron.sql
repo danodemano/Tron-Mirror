@@ -52,7 +52,7 @@ CREATE TABLE IF NOT EXISTS `downloads` (
   `size` int(25) NOT NULL,
   `version` varchar(10) NOT NULL,
   `secure` tinyint(4) NOT NULL
-) ENGINE=MyISAM AUTO_INCREMENT=31 DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
 --
 -- Indexes for dumped tables
