@@ -9,7 +9,7 @@
 
 #Written by reddit.com/u/-jimmyrustles
 #Modified by reddit.com/u/danodemano (see changelog)
-#VERSION 6.3
+#VERSION 7.0
 
 #CHANGELOG:
 #V1.0 Initial release
@@ -33,6 +33,7 @@
 #v6.1 Fixed bug to not check GPG key if sha256sum file not updated or not found, fixed bug in download retry logic
 #v6.2 Added option to download to temp directory them move to the actual repo directory, removed command line download dir option
 #v6.3 Fixed bug with line breaks in sha256sum file, fixed coloring bug
+#v7.0 Overhaul of update check logic to also compare the SHA256 sums in addition to the version number
 
 #TODO
 # - Nothing -
@@ -400,6 +401,14 @@ then
 	rm -f -v "$loglocation"
 fi #end if [ "$overwritelog" == true ]
 
+#Before we get the updated sha256sum file lets get the current hash from the local file
+IN=$(tail -n 1 "$downloaddir/sha256sums.txt")
+arrIN=(${IN//,/ })
+localversionhash=${arrIN[1]}
+echo "${green}"
+logging "Local hash is: $localversionhash" "INFO"
+echo "${reset}"
+
 #download sha256sums.txt.asc to $downloaddir if repo version is newer
 output1=`wget -P "${downloaddir}" -N "${sha256sumasc}" 2>&1`
 #wget -P "$downloaddir" -N "$sha256sumasc" >> output
@@ -453,20 +462,26 @@ fi #end if [[ $output1 == *"Server file no newer than local file"* ]]
 
 #get latest version number
 latestversion=$(tail -n 1 "$downloaddir/sha256sums.txt" | awk '{ print $2 }')
-
 echo "${green}"
 logging "Latest version is: $latestversion" "INFO"
 echo "${reset}"
 
+#Get the latest version hash
+IN=$(tail -n 1 "$downloaddir/sha256sums.txt")
+arrIN=(${IN//,/ })
+latestversionhash=${arrIN[1]}
+echo "${green}"
+logging "Local hash is: $latestversionhash" "INFO"
+echo "${reset}"
+
 #find latest local version
 localversion=$(ls -1 "$downloaddir" | grep 'Tron' | grep 'exe' | tail -n 1 | awk '{ print $2 }')
-
 echo "${green}"
 logging "Your version: $localversion" "INFO"
 echo "${reset}"
 
 #compare local and remote versions - update as needed
-if [ "$latestversion" != "$localversion" ]
+if [ "$latestversion" != "$localversion" ] || [ "$latestversionhash" != "$localversionhash" ]
 then
 	logging "MIRROR IS OUT OF DATE! UPDATING!" "INFO"
 	#identify version to update to
