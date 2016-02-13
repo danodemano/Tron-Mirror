@@ -22,6 +22,7 @@ Revisions: 			20151010 - Updated to use sha256 sum file
 							20151106 - Update style
 							20151107 - Replaced tables with CSS and cleanup
 							20151123 - Fixed URL encoding
+							20160212 - Update checks now uses hashes also
 ***************************************************************
 To do list: 				Add download tracking
 ***************************************************************
@@ -88,16 +89,29 @@ $tmp_array = explode(" ", $mirror_file);
 $mirror_version = $tmp_array[1];
 unset($tmp_array);
 
+//Get the current local hash
+$data = file("sha256sums.txt");
+$line = $data[count($data)-1];
+$tmp_array = array();
+$tmp_array = explode(",", $line);
+$mirror_hash = $tmp_array[1];
+unset($data);
+unset($line);
+unset($tmp_array);
+
 //Get the latest version by parsing out the text file from the official mirror
 $file = $official_sha256;
 $data = file($file);
 $line = $data[count($data)-1];
 $tmp_array = array();
 $tmp_array = explode(" ", $line);
+$tmp_array2 = explode(",", $tmp_array[0]);
 $latest_version = $tmp_array[1];
+$latest_hash = $tmp_array2[1];
 unset($data);
 unset($line);
 unset($tmp_array);
+unset($tmp_array2);
 
 //Get the file last modified time
 $modified_time = date ('Y-m-d H:i:s', filectime($mirror_file));
@@ -229,9 +243,12 @@ Tron Script Mirror
 </div>
 
 <?php
+//Temp override until official sha256sums file gets fixed
+//$latest_version="v8.4.0";
+
 //Compare the mirror version against the official version
 //Also let the visitor know if this mirror is current
-if ($latest_version === $mirror_version) {
+if (($latest_version === $mirror_version) AND ($latest_hash === $mirror_hash)) {
 	//This mirror is current
 	echo '<div class="current">This mirror has the current version!</div>'."\r\n";
 } else if (empty($latest_version)) {
