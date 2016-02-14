@@ -96,6 +96,12 @@ invert=$(tput rev)
 #Change to the current running directory
 cd "${BASH_SOURCE%/*}"
 
+#Verify that the config file exists
+if [ ! -f tronupdate.ini ]; then
+	echo "Configuration file no found - exiting!"
+	exit
+fi
+
 #We need to get all the configurations from the ini file
 downloaddir=`awk -F '=' '{if (! ($0 ~ /^;/) && $0 ~ /download_directory/) print $2}' tronupdate.ini | tr -d ' '`
 purgeoldversions=`awk -F '=' '{if (! ($0 ~ /^;/) && $0 ~ /purge_old_versions/) print $2}' tronupdate.ini | tr -d ' '`
