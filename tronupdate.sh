@@ -9,7 +9,7 @@
 
 #Written by reddit.com/u/-jimmyrustles
 #Modified by reddit.com/u/danodemano (see changelog)
-#VERSION 7.0
+#VERSION 7.5
 
 #CHANGELOG:
 #V1.0 Initial release
@@ -34,6 +34,7 @@
 #v6.2 Added option to download to temp directory them move to the actual repo directory, removed command line download dir option
 #v6.3 Fixed bug with line breaks in sha256sum file, fixed coloring bug
 #v7.0 Overhaul of update check logic to also compare the SHA256 sums in addition to the version number
+#v7.5 Moved configurations to dedicated ini file so that updates don't require a reconfiguration
 
 #TODO
 # - Nothing -
@@ -68,86 +69,10 @@
 #*************************************************************************************************************************************
 #*************************************************************************************************************************************
 #*************************************************************************************************************************************
-# THIS IS THE MAIN CONFIG AREA - PLEASE UPDATE THESE VALUES BASED ON YOUR SERVER SETUP
+# CONFIGURATION IS NOW DONE IN DEDICATED tronupdate.ini FILE - PLEASE MAKE ANY NEEDED CHANGES THERE
 #*************************************************************************************************************************************
 #*************************************************************************************************************************************
 #*************************************************************************************************************************************
-
-#Set download location (usually your Tron mirror directory)
-#If the downloadtemp is set below we will download to there then verify and move to this directory
-downloaddir="/var/www/html/danodemano/Tron"
-
-#Change to true to purge all previous Tron versions when updating.
-purgeoldversions=true
-
-#symlink latest Tron version to "latest.exe" when updating
-#Change to true to enable
-symlink=false
-
-#How many times do you want to attempt to re-download the file.
-maxdownloadattempts=5 #You most likely want to leave this as-it
-
-#Duration (in seconds) to sleep before attempting the download again
-sleeptime=120 #2 minutes is probably fine, you can tweak if needed though
-
-#Are we going to verify the keys of the sha256sum file to ensure authenticity?
-#Please ensure you have gpg installed and that you import Vocatus' key: gpg --recv-keys 82A211A2
-#I STRONGLY RECCOMEND YOU LEAVE THIS ON - In the event a malicious version of Tron make it
-#to the official repo this will ensure it doesn't propogate to your mirror.
-checkgpg=true
-
-#Send email alert on various failure events - your server must have an email server configured (sendmail, postfix, etc)
-#Set to true to enable (also enter your email addresses below)
-sendemail=true
-
-#Send email alert when updating the mirror?  As sbove must have an email server configured
-#Set to true to enable
-updateemail=true
-
-#The email address we are sending from
-emailfrom="tron@danodemano.com"
-
-#The email address we are sending to
-emailto="webmaster@danodemano.com"
-
-#Enable logging of script actions to a file
-#Set true to enable and specify the log location below
-enablelogging=true
-
-#Do you want to overwrite the log each run?
-#Set true to overwrite and false to keep existing entries
-overwritelog=false
-
-#The location of the log file
-#If you're on shared hosting this will need changed
-loglocation="/var/log/tronupdate.log"
-
-#IF YOU ENABLE LOGGING I SUGGEST YOU CREATE A LOGROTATE FILE FOR TRON
-#/var/log/tronupdate.log {
-#	missingok
-#	monthly
-#	notifempty
-#	compress
-#}
-
-#Set true to enable downloading to a temp directory
-#Once the sha256sum is verified the file will be moved to the proper directory
-#Be sure to specify the temp directory below
-#NOTE: We don't worry about the shasum files and download straight to the specified directory
-downloadtemp=true
-
-#Temp directory to download the file to for verification
-tempdir="/tmp/tron"
-
-# Set repo url
-repodir="https://bmrf.org/repos/tron" #You will most likely want to keep this as it is.
-
-# Set Tron repo sha256sums.txt.asc file url
-sha256sumasc="https://bmrf.org/repos/tron/sha256sums.txt.asc" #You will most likely want to keep this as it is.
-
-# Set Tron repo sha256sum.txt file url
-sha256sumsurl="https://bmrf.org/repos/tron/sha256sums.txt" #You will most likely want to keep this as it is.
-
 
 #*************************************************************************************************************************************
 #*************************************************************************************************************************************
@@ -167,6 +92,30 @@ blue=$(tput setaf 4)
 reset=$(tput sgr0)
 invert=$(tput rev)
 #End text colors
+
+#Change to the current running directory
+cd "${BASH_SOURCE%/*}"
+
+#We need to get all the configurations from the ini file
+downloaddir=`awk -F '=' '{if (! ($0 ~ /^;/) && $0 ~ /download_directory/) print $2}' tronupdate.ini | tr -d ' '`
+purgeoldversions=`awk -F '=' '{if (! ($0 ~ /^;/) && $0 ~ /purge_old_versions/) print $2}' tronupdate.ini | tr -d ' '`
+symlink=`awk -F '=' '{if (! ($0 ~ /^;/) && $0 ~ /symlink/) print $2}' tronupdate.ini | tr -d ' '`
+maxdownloadattempts=`awk -F '=' '{if (! ($0 ~ /^;/) && $0 ~ /max_download_attempts/) print $2}' tronupdate.ini | tr -d ' '`
+sleeptime=`awk -F '=' '{if (! ($0 ~ /^;/) && $0 ~ /sleep_time/) print $2}' tronupdate.ini | tr -d ' '`
+checkgpg=`awk -F '=' '{if (! ($0 ~ /^;/) && $0 ~ /check_gpg/) print $2}' tronupdate.ini | tr -d ' '`
+sendemail=`awk -F '=' '{if (! ($0 ~ /^;/) && $0 ~ /send_email/) print $2}' tronupdate.ini | tr -d ' '`
+updateemail=`awk -F '=' '{if (! ($0 ~ /^;/) && $0 ~ /update_email/) print $2}' tronupdate.ini | tr -d ' '`
+emailfrom=`awk -F '=' '{if (! ($0 ~ /^;/) && $0 ~ /email_from/) print $2}' tronupdate.ini | tr -d ' '`
+emailto=`awk -F '=' '{if (! ($0 ~ /^;/) && $0 ~ /email_to/) print $2}' tronupdate.ini | tr -d ' '`
+enablelogging=`awk -F '=' '{if (! ($0 ~ /^;/) && $0 ~ /enable_logging/) print $2}' tronupdate.ini | tr -d ' '`
+overwritelog=`awk -F '=' '{if (! ($0 ~ /^;/) && $0 ~ /overwrite_log/) print $2}' tronupdate.ini | tr -d ' '`
+loglocation=`awk -F '=' '{if (! ($0 ~ /^;/) && $0 ~ /log_location/) print $2}' tronupdate.ini | tr -d ' '`
+downloadtemp=`awk -F '=' '{if (! ($0 ~ /^;/) && $0 ~ /download_temp/) print $2}' tronupdate.ini | tr -d ' '`
+tempdir=`awk -F '=' '{if (! ($0 ~ /^;/) && $0 ~ /temp_dir/) print $2}' tronupdate.ini | tr -d ' '`
+repodir=`awk -F '=' '{if (! ($0 ~ /^;/) && $0 ~ /repo_dir/) print $2}' tronupdate.ini | tr -d ' '`
+sha256sumasc=`awk -F '=' '{if (! ($0 ~ /^;/) && $0 ~ /sha256sumasc/) print $2}' tronupdate.ini | tr -d ' '`
+sha256sumsurl=`awk -F '=' '{if (! ($0 ~ /^;/) && $0 ~ /sha256sumsurl/) print $2}' tronupdate.ini | tr -d ' '`
+#End parsing of configuration file
 
 #Begin functions
 #************
@@ -460,7 +409,7 @@ else
 	fi #end if [ "$checkgpg" == true ]
 fi #end if [[ $output1 == *"Server file no newer than local file"* ]]
 
-#get latest version number
+#Get latest version number
 latestversion=$(tail -n 1 "$downloaddir/sha256sums.txt" | awk '{ print $2 }')
 echo "${green}"
 logging "Latest version is: $latestversion" "INFO"
@@ -474,10 +423,10 @@ echo "${green}"
 logging "Local hash is: $latestversionhash" "INFO"
 echo "${reset}"
 
-#find latest local version
+#Get the local version number
 localversion=$(ls -1 "$downloaddir" | grep 'Tron' | grep 'exe' | tail -n 1 | awk '{ print $2 }')
 echo "${green}"
-logging "Your version: $localversion" "INFO"
+logging "Local version: $localversion" "INFO"
 echo "${reset}"
 
 #compare local and remote versions - update as needed
