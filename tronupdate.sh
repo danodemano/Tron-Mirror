@@ -9,7 +9,7 @@
 
 #Written by reddit.com/u/-jimmyrustles
 #Modified by reddit.com/u/danodemano (see changelog)
-#VERSION 7.5
+#VERSION 8.0
 
 #CHANGELOG:
 #V1.0 Initial release
@@ -35,6 +35,7 @@
 #v6.3 Fixed bug with line breaks in sha256sum file, fixed coloring bug
 #v7.0 Overhaul of update check logic to also compare the SHA256 sums in addition to the version number
 #v7.5 Moved configurations to dedicated ini file so that updates don't require a reconfiguration
+#v8.0 Changed update logic to keep extending check time on failure, script also dies if another copy is already executing
 
 #TODO
 # - Nothing -
@@ -85,6 +86,15 @@
 #Begin script
 #**********
 
+#Get this scripts name so we can check if already running
+my_name=$(basename -- "$0")
+
+#Before doing anything make sure another copy isn't already running, exit if so
+if [ $(pidof -x "$my_name"| wc -w) -gt 2 ]; then
+	echo "A copy of this script is already running - exiting!"
+	exit
+fi #end if [ $(pidof -x "$my_name"| wc -w) -gt 2 ]; then
+
 #Text colors for use in console messages - probably don't want to mess with this
 red=$(tput setaf 1)
 green=$(tput setaf 2)
@@ -98,9 +108,9 @@ cd "${BASH_SOURCE%/*}"
 
 #Verify that the config file exists
 if [ ! -f tronupdate.ini ]; then
-	echo "Configuration file no found - exiting!"
+    echo "Configuration file not found - exiting!"
 	exit
-fi
+fi #end if [ ! -f tronupdate.ini ]; then
 
 #We need to get all the configurations from the ini file
 downloaddir=`awk -F '=' '{if (! ($0 ~ /^;/) && $0 ~ /download_directory/) print $2}' tronupdate.ini | tr -d ' '`
@@ -122,6 +132,13 @@ repodir=`awk -F '=' '{if (! ($0 ~ /^;/) && $0 ~ /repo_dir/) print $2}' tronupdat
 sha256sumasc=`awk -F '=' '{if (! ($0 ~ /^;/) && $0 ~ /sha256sumasc/) print $2}' tronupdate.ini | tr -d ' '`
 sha256sumsurl=`awk -F '=' '{if (! ($0 ~ /^;/) && $0 ~ /sha256sumsurl/) print $2}' tronupdate.ini | tr -d ' '`
 #End parsing of configuration file
+
+#For the moment we are going to override the download attempts variable.
+#Need to make make a note to either remove it from the config or just depreciate it.
+#We actually WANT the script to keep trying just on a longer and longer interval
+#and not to launch another copy of itself which is handled above.
+#This helps mitigate load to the main repo if a corrupted exe gets uploaded.
+maxdownloadattempts=9999999
 
 #Begin functions
 #************
@@ -314,6 +331,15 @@ function checkifverified {
 		#All done - exit the script
 		exit
 	else
+		#As the download fails we keep increasing the sleeptime to avoid repeated hammering on the main mirror
+		#in the event a corrupted EXE gets uploaded.  We are just going to double the sleeptime each loop
+		#hopefully creating less and less load until checks are few and far between.  We are also going to set an 
+		#upper limit of ~2 hours so things don't get WAY out of control.
+		if [ "$sleeptime" <= 7200 ]
+		then
+			sleeptime=$((sleeptime * 2))
+		fi #end if [ "$sleeptime" <= 7200 ]
+	
 		echo "${red}"
 		logging "Hashes do not match! $updatefile does not match repo file! Will retry in $sleeptime seconds!" "WARNING"
 		echo "${reset}"
