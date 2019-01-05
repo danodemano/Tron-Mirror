@@ -77,7 +77,7 @@ $files = array();
 $current_path = realpath(dirname(__FILE__));
 
 //Search for .exe files in this directory
-foreach (glob(realpath(dirname(__FILE__)) . "/*.exe") as $file) {
+foreach (glob(realpath(dirname(__FILE__)) . "/Tron*.exe") as $file) {
 	$files[] = basename($file);
 } //end foreach (glob(realpath(dirname(__FILE__)) . "/*.exe") as $file) {
 
